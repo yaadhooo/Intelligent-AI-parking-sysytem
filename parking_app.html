@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ParkSmart AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: #2a2a3a;
+  --accent: #00e5ff;
+  --accent2: #7c3aed;
+  --ok: #00ff87;
+  --warn: #ff4757;
+  --text: #e8e8f0;
+  --muted: #666680;
+  --card: #14141e;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow orb */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 18px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--accent);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 8px var(--accent); }
+  50% { box-shadow: 0 0 20px var(--accent), 0 0 40px rgba(0,229,255,0.3); }
+}
+
+.user-badge {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.user-badge span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; flex: 1; flex-direction: column; animation: fadeUp 0.3s ease; }
+.screen.active { display: flex; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(16px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── HERO (Login/Signup) ── */
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -2px;
+  margin-bottom: 8px;
+}
+
+.hero-title .hl { color: var(--accent); }
+
+.hero-sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+/* ── TABS ── */
+.tab-row {
+  display: flex;
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 500;
+}
+
+/* ── FORMS ── */
+.field { margin-bottom: 16px; }
+
+.field label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  transition: border 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+}
+
+.field input::placeholder { color: var(--muted); }
+
+/* ── BUTTONS ── */
+.btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn:active::after { opacity: 0.08; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover { box-shadow: 0 0 30px rgba(0,229,255,0.4); transform: translateY(-1px); }
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--warn);
+  border: 1px solid var(--warn);
+}
+.btn-danger:hover { background: rgba(255,71,87,0.1); }
+
+.btn-admin {
+  background: var(--accent2);
+  color: #fff;
+}
+.btn-admin:hover { box-shadow: 0 0 30px rgba(124,58,237,0.4); transform: translateY(-1px); }
+
+.btn + .btn { margin-top: 10px; }
+
+.btn-sm {
+  width: auto;
+  padding: 8px 14px;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+/* ── ADMIN GATE ── */
+.admin-link {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.admin-link a {
+  color: var(--accent2);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 12px;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 999;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#toast.ok { border-color: var(--ok); color: var(--ok); }
+#toast.err { border-color: var(--warn); color: var(--warn); }
+#toast.info { border-color: var(--accent); color: var(--accent); }
+
+/* ── DASHBOARD ── */
+.dash-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── AI PANEL ── */
+.ai-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle at top right, rgba(0,229,255,0.08), transparent);
+  pointer-events: none;
+}
+
+.ai-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-label::before {
+  content: '◆';
+  animation: spin 3s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ai-text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  min-height: 40px;
+}
+
+.ai-text.loading {
+  color: var(--muted);
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.ai-btn {
+  margin-top: 12px;
+  width: auto;
+  padding: 8px 16px;
+  font-size: 11px;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-num.green { color: var(--ok); }
+.stat-num.red   { color: var(--warn); }
+.stat-num.blue  { color: var(--accent); }
+
+.stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+/* ── SECTION TITLE ── */
+.sec-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sec-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── SLOT GRID ── */
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.slot-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.slot-card:active { transform: scale(0.97); }
+
+.slot-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.slot-status {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 4px;
+}
+
+.slot-card.available {
+  border-color: rgba(0,255,135,0.3);
+}
+.slot-card.available:hover {
+  border-color: var(--ok);
+  box-shadow: 0 0 20px rgba(0,255,135,0.15);
+}
+.slot-card.available .slot-num { color: var(--ok); }
+.slot-card.available .slot-status { color: rgba(0,255,135,0.7); }
+
+.slot-card.booked {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.slot-card.booked .slot-num { color: var(--warn); }
+.slot-card.booked .slot-status { color: rgba(255,71,87,0.7); }
+
+.slot-card.mine {
+  border-color: var(--accent);
+  background: rgba(0,229,255,0.05);
+  cursor: pointer;
+}
+.slot-card.mine .slot-num { color: var(--accent); }
+.slot-card.mine .slot-status { color: var(--accent); opacity: 0.7; }
+
+.slot-icon {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 28px;
+  opacity: 0.12;
+}
+
+.slot-user-tag {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 2px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── MY BOOKINGS ── */
+.booking-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.booking-info strong {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.booking-info span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+/* ── ADMIN TABLE ── */
+.admin-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.admin-row .slot-id {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.badge.ok { background: rgba(0,255,135,0.1); color: var(--ok); border: 1px solid rgba(0,255,135,0.3); }
+.badge.err { background: rgba(255,71,87,0.1); color: var(--warn); border: 1px solid rgba(255,71,87,0.3); }
+
+/* ── NAV ── */
+.bottom-nav {
+  display: flex;
+  background: rgba(17,17,24,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn.active { color: var(--accent); }
+.nav-btn .nav-icon { font-size: 20px; }
+
+/* ── ADMIN SCREEN ── */
+.admin-banner {
+  background: linear-gradient(135deg, var(--accent2), #4c1d95);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-banner .icon { font-size: 30px; }
+
+.admin-banner-text strong {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  display: block;
+}
+
+.admin-banner-text small { font-size: 11px; color: rgba(255,255,255,0.7); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  animation: fadeIn 0.2s;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 24px 40px;
+  width: 100%;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.modal-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── MISC ── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      ParkSmart<span style="color:var(--accent)">AI</span>
+    </div>
+    <div class="user-badge" id="userBadge" onclick="if(currentUser) showLogoutConfirm()" style="display:none">
+      👤 <span id="headerUser"></span>
+    </div>
+  </div>
+
+  <!-- ════ SCREEN: AUTH ════ -->
+  <div class="screen active" id="authScreen">
+    <div class="hero">
+      <div class="hero-title">Smart<br>Parking<br><span class="hl">AI</span></div>
+      <div class="hero-sub">Book slots intelligently. AI tells you where to park — before you even ask.</div>
+
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+        <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="loginUser" placeholder="your_username" autocomplete="username">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">Enter System →</button>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signupForm" style="display:none">
+        <div class="field">
+          <label>Choose Username</label>
+          <input type="text" id="signUser" placeholder="your_username" autocomplete="username">
+        </div>
+        <div class="field">
+          <label>Choose Password</label>
+          <input type="password" id="signPass" placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <button class="btn btn-primary" onclick="doSignup()">Create Account →</button>
+      </div>
+
+      <div class="admin-link">
+        Admin? <a onclick="showAdminModal()">Access Admin Panel</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ SCREEN: DASHBOARD ════ -->
+  <div class="screen" id="dashScreen">
+    <div class="dash-body">
+
+      <!-- AI PANEL -->
+      <div class="ai-panel">
+        <div class="ai-label">AI Recommendation</div>
+        <div class="ai-text" id="aiText">Tap the button to get an AI-powered parking recommendation.</div>
+        <button class="btn btn-ghost ai-btn" onclick="getAIRecommendation()">⚡ Ask AI</button>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num green" id="statAvail">—</div>
+          <div class="stat-label">Free</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num red" id="statBooked">—</div>
+          <div class="stat-label">Booked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num blue" id="statMine">—</div>
+          <div class="stat-label">Mine</div>
+        </div>
+      </div>
+
+      <!-- SLOTS -->
+      <div class="sec-title">Parking Slots</div>
+      <div class="slot-grid" id="slotGrid"></div>
+    </div>
+
+    <!-- NAV -->
+    <div class="bottom-nav" id="mainNav">
+      <button class="nav-btn active" onclick="showTab('dashTab','slots')">
+        <span class="nav-icon">🅿️</span> Slots
+      </button>
+      <button class="nav-btn" onclick="showTab('myTab','bookings')">
+        <span class="nav-icon">🗂️</span> Mine
+      </button>
+      <button class="nav-btn" onclick="doLogout()">
+        <span class="nav-icon">🚪</span> Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- ════ SCREEN: MY BOOKINGS ════ -->
+  <div class="screen" id="myScreen">
+    <div class="dash-body">
+      <div class="sec-title">My Bookings</div>
+      <div id="bookingList"></div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="showTab('dashTab','slots')">
+        <span class="nav-icon">🅿️</span> Slots
+      </button>
+      <button class="nav-btn active" onclick="showTab('myTab','bookings')">
+        <span class="nav-icon">🗂️</span> Mine
+      </button>
+      <button class="nav-btn" onclick="doLogout()">
+        <span class="nav-icon">🚪</span> Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- ════ SCREEN: ADMIN ════ -->
+  <div class="screen" id="adminScreen">
+    <div class="dash-body">
+      <div class="admin-banner">
+        <div class="icon">🔧</div>
+        <div class="admin-banner-text">
+          <strong>Admin Control</strong>
+          <small>Full slot management access</small>
+        </div>
+      </div>
+
+      <!-- AI PANEL for admin -->
+      <div class="ai-panel">
+        <div class="ai-label">AI Occupancy Report</div>
+        <div class="ai-text" id="aiAdminText">Get an AI analysis of current parking usage.</div>
+        <button class="btn btn-ghost ai-btn" onclick="getAdminAI()">⚡ Analyze</button>
+      </div>
+
+      <div class="sec-title">All Slots</div>
+      <div id="adminList"></div>
+
+      <div style="margin-top:16px">
+        <button class="btn btn-danger" onclick="resetAll()">↺ Reset All Slots</button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="adminLogout()">← Back to Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODALS -->
+<!-- Admin Login Modal -->
+<div class="modal-overlay" id="adminModal" style="display:none" onclick="closeAdminModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔧 Admin Access</div>
+    <div class="modal-sub">Enter admin credentials to manage slots</div>
+    <div class="field">
+      <label>Admin Username</label>
+      <input type="text" id="adminUser" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Admin Password</label>
+      <input type="password" id="adminPass" placeholder="••••••••">
+    </div>
+    <button class="btn btn-admin" onclick="doAdminLogin()">Access Admin Panel →</button>
+    <button class="btn btn-ghost" onclick="closeAdminModal()" style="margin-top:10px">Cancel</button>
+  </div>
+</div>
+
+<!-- Slot Confirm Modal -->
+<div class="modal-overlay" id="slotModal" style="display:none" onclick="closeSlotModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="slotModalTitle">Book Slot</div>
+    <div class="modal-sub" id="slotModalSub">Confirm your booking</div>
+    <button class="btn btn-primary" id="slotModalBtn" onclick="">Confirm →</button>
+    <button class="btn btn-ghost" onclick="closeSlotModal()" style="margin-top:10px">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let users = {};
+let slots = {};
+let currentUser = null;
+let isAdmin = false;
+let pendingSlotId = null;
+let activeTab = 'slots';
+
+// ── INIT ──
+window.onload = () => {
+  // Pre-seed a demo user
+  users['demo'] = { password: 'demo123' };
+};
+
+// ── TAB SWITCH (Login/Signup) ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='signup'));
+  });
+  document.getElementById('loginForm').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('signupForm').style.display = tab==='signup' ? '' : 'none';
+}
+
+// ── AUTH ──
+function doSignup() {
+  const u = document.getElementById('signUser').value.trim();
+  const p = document.getElementById('signPass').value.trim();
+  if (!u || !p) return toast('Fill in all fields', 'err');
+  if (u === 'admin') return toast('Reserved username', 'err');
+  if (users[u]) return toast('Username taken', 'err');
+  users[u] = { password: p };
+  toast('Account created! Please log in.', 'ok');
+  switchTab('login');
+  document.getElementById('loginUser').value = u;
+}
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if (!u || !p) return toast('Fill in all fields', 'err');
+  if (!users[u] || users[u].password !== p) return toast('Invalid credentials', 'err');
+  currentUser = u;
+  isAdmin = false;
+  toast(`Welcome, ${u}!`, 'ok');
+  goTo('dashScreen');
+  renderDash();
+}
+
+function doLogout() {
+  currentUser = null;
+  pendingSlotId = null;
+  goTo('authScreen');
+  document.getElementById('userBadge').style.display = 'none';
+  toast('Logged out', 'info');
+}
+
+// ── ADMIN ──
+function showAdminModal() {
+  document.getElementById('adminModal').style.display = 'flex';
+  document.getElementById('adminUser').value = '';
+  document.getElementById('adminPass').value = '';
+}
+
+function closeAdminModal(e) {
+  if (!e || e.target === document.getElementById('adminModal'))
+    document.getElementById('adminModal').style.display = 'none';
+}
+
+function doAdminLogin() {
+  const u = document.getElementById('adminUser').value.trim();
+  const p = document.getElementById('adminPass').value.trim();
+  if (u === 'admin' && p === 'admin123') {
+    isAdmin = true; currentUser = null;
+    document.getElementById('adminModal').style.display = 'none';
+    toast('Admin access granted', 'ok');
+    goTo('adminScreen');
+    renderAdmin();
+  } else {
+    toast('Invalid admin credentials', 'err');
+  }
+}
+
+function adminLogout() {
+  isAdmin = false;
+  goTo('authScreen');
+  document.getElementById('userBadge').style.display = 'none';
+  toast('Admin logged out', 'info');
+}
+
+// ── SCREEN ──
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  if (screenId === 'dashScreen' || screenId === 'myScreen') {
+    document.getElementById('userBadge').style.display = 'flex';
+    document.getElementById('headerUser').textContent = currentUser;
+  }
+}
+
+function showTab(tabId, name) {
+  activeTab = name;
+  if (name === 'slots') { goTo('dashScreen'); renderDash(); }
+  if (name === 'bookings') { goTo('myScreen'); renderBookings(); }
+  // update nav buttons
+  document.querySelectorAll('#mainNav .nav-btn, #myScreen .nav-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+}
+
+// ── SLOT DATA ──
+function getStats() {
+  let avail = 0, booked = 0, mine = 0;
+  for (let i = 1; i <= 10; i++) {
+    const s = slots[i];
+    if (!s) avail++;
+    else if (s === currentUser) { booked++; mine++; }
+    else booked++;
+  }
+  return { avail, booked, mine };
+}
+
+// ── RENDER DASHBOARD ──
+function renderDash() {
+  const stats = getStats();
+  document.getElementById('statAvail').textContent = stats.avail;
+  document.getElementById('statBooked').textContent = stats.booked;
+  document.getElementById('statMine').textContent = stats.mine;
+
+  const grid = document.getElementById('slotGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const booked = slots[i];
+    let cls = 'slot-card ';
+    let statusText = '';
+    let userTag = '';
+    if (!booked) {
+      cls += 'available';
+      statusText = 'Available';
+    } else if (booked === currentUser) {
+      cls += 'mine';
+      statusText = 'Your Slot';
+    } else {
+      cls += 'booked';
+      statusText = 'Occupied';
+      userTag = `<div class="slot-user-tag">by ${booked}</div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = cls;
+    card.innerHTML = `
+      <div>
+        <div class="slot-num">#${String(i).padStart(2,'0')}</div>
+        <div class="slot-status">${statusText}</div>
+        ${userTag}
+      </div>
+      <div class="slot-icon">🚗</div>
+    `;
+
+    if (!booked) {
+      card.onclick = () => openSlotModal(i, 'book');
+    } else if (booked === currentUser) {
+      card.onclick = () => openSlotModal(i, 'cancel');
+    }
+    grid.appendChild(card);
+  }
+}
+
+// ── SLOT MODAL ──
+function openSlotModal(id, action) {
+  pendingSlotId = id;
+  const modal = document.getElementById('slotModal');
+  modal.style.display = 'flex';
+  if (action === 'book') {
+    document.getElementById('slotModalTitle').textContent = `Book Slot #${String(id).padStart(2,'0')}`;
+    document.getElementById('slotModalSub').textContent = 'This slot is available. Confirm your booking.';
+    document.getElementById('slotModalBtn').textContent = '✓ Book This Slot';
+    document.getElementById('slotModalBtn').onclick = () => confirmBook(id);
+  } else {
+    document.getElementById('slotModalTitle').textContent = `Cancel Booking #${String(id).padStart(2,'0')}`;
+    document.getElementById('slotModalSub').textContent = 'Are you sure you want to cancel this slot?';
+    document.getElementById('slotModalBtn').textContent = '✗ Cancel Booking';
+    document.getElementById('slotModalBtn').onclick = () => confirmCancel(id);
+  }
+}
+
+function closeSlotModal(e) {
+  if (!e || e.target === document.getElementById('slotModal'))
+    document.getElementById('slotModal').style.display = 'none';
+}
+
+function confirmBook(id) {
+  slots[id] = currentUser;
+  document.getElementById('slotModal').style.display = 'none';
+  toast(`Slot #${String(id).padStart(2,'0')} booked!`, 'ok');
+  renderDash();
+}
+
+function confirmCancel(id) {
+  delete slots[id];
+  document.getElementById('slotModal').style.display = 'none';
+  toast(`Slot #${String(id).padStart(2,'0')} cancelled`, 'info');
+  renderDash();
+}
+
+// ── RENDER BOOKINGS ──
+function renderBookings() {
+  const list = document.getElementById('bookingList');
+  const mySlots = Object.keys(slots).filter(id => slots[id] === currentUser);
+
+  if (mySlots.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🅿️</div>No bookings yet.<br>Go to Slots to book a space.</div>`;
+    return;
+  }
+
+  list.innerHTML = mySlots.map(id => `
+    <div class="booking-row">
+      <div class="booking-info">
+        <strong>#${String(id).padStart(2,'0')}</strong>
+        <span>Active Booking</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="quickCancel(${id})">Cancel</button>
+    </div>
+  `).join('');
+}
+
+function quickCancel(id) {
+  delete slots[id];
+  toast(`Slot #${String(id).padStart(2,'0')} cancelled`, 'info');
+  renderBookings();
+}
+
+// ── ADMIN RENDER ──
+function renderAdmin() {
+  const list = document.getElementById('adminList');
+  let html = '';
+  for (let i = 1; i <= 10; i++) {
+    const owner = slots[i];
+    html += `
+      <div class="admin-row">
+        <div class="slot-id">Slot #${String(i).padStart(2,'0')}</div>
+        <div style="text-align:right">
+          <div class="badge ${owner ? 'err' : 'ok'}">${owner ? 'Occupied' : 'Free'}</div>
+          ${owner ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">${owner}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  list.innerHTML = html;
+}
+
+function resetAll() {
+  if (!confirm('Reset ALL bookings? This cannot be undone.')) return;
+  slots = {};
+  renderAdmin();
+  toast('All slots reset', 'ok');
+}
+
+// ── AI ──
+async function getAIRecommendation() {
+  const el = document.getElementById('aiText');
+  el.textContent = 'Analyzing parking data...';
+  el.className = 'ai-text loading';
+
+  const available = [];
+  const booked = [];
+  for (let i = 1; i <= 10; i++) {
+    if (!slots[i]) available.push(i);
+    else booked.push(i);
+  }
+
+  const prompt = `You are a smart parking AI assistant. Current state of a 10-slot parking lot:
+- Available slots: ${available.length > 0 ? available.map(i=>'#'+String(i).padStart(2,'0')).join(', ') : 'NONE'}
+- Occupied slots: ${booked.length > 0 ? booked.map(i=>'#'+String(i).padStart(2,'0')).join(', ') : 'NONE'}
+- Current user: "${currentUser}"
+- User's bookings: ${Object.keys(slots).filter(id=>slots[id]===currentUser).length > 0 ? Object.keys(slots).filter(id=>slots[id]===currentUser).map(i=>'#'+String(i).padStart(2,'0')).join(', ') : 'None'}
+
+Give a SHORT (2-3 sentence), friendly and smart parking recommendation. Suggest the best slot to book (if any are free), mention occupancy rate, and one quick tip. Be conversational and helpful.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.map(c => c.text || '').join('') || 'Could not get recommendation.';
+    el.textContent = text;
+    el.className = 'ai-text';
+  } catch(e) {
+    el.textContent = `${available.length} slots free. ${available.length > 0 ? 'Slot #'+String(available[0]).padStart(2,'0')+' is available — grab it now!' : 'Parking is full. Check back later.'}`;
+    el.className = 'ai-text';
+  }
+}
+
+async function getAdminAI() {
+  const el = document.getElementById('aiAdminText');
+  el.textContent = 'Generating occupancy report...';
+  el.className = 'ai-text loading';
+
+  const total = 10;
+  const occupied = Object.keys(slots).length;
+  const rate = Math.round((occupied / total) * 100);
+  const users_parked = [...new Set(Object.values(slots))];
+
+  const prompt = `You are a parking lot management AI. Provide a brief admin report:
+- Total slots: ${total}
+- Occupied: ${occupied}
+- Available: ${total - occupied}
+- Occupancy rate: ${rate}%
+- Unique users parked: ${users_parked.length} (${users_parked.join(', ') || 'none'})
+
+Give a 2-3 sentence admin summary: current occupancy status, any notable patterns, and one management suggestion. Be professional and concise.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.map(c => c.text || '').join('') || 'Could not generate report.';
+    el.textContent = text;
+    el.className = 'ai-text';
+  } catch(e) {
+    el.textContent = `Occupancy: ${rate}% (${occupied}/${total} slots). ${occupied === 0 ? 'Lot is empty.' : occupied === total ? 'Lot is FULL.' : 'Normal operations.'}`;
+    el.className = 'ai-text';
+  }
+}
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 2800);
+}
+
+function showLogoutConfirm() {
+  if (confirm(`Log out as ${currentUser}?`)) doLogout();
+}
+</script>
+</body>
+</html>
